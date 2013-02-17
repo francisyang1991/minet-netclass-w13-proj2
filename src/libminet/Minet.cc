@@ -1098,8 +1098,6 @@ int MinetGetNextEvent(MinetEvent &event, double timeout)
 
     Time doneby(timeout);
 
-
-
     while (1)
 	{
         FD_ZERO(&read_fds);
@@ -1124,6 +1122,7 @@ int MinetGetNextEvent(MinetEvent &event, double timeout)
         {
             rc = select(maxfd+1, &read_fds,0,0,0);
         }
+
         if (rc<0)
         {
             if (errno==EINTR)

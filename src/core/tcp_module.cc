@@ -15,6 +15,10 @@
 
 #include "Minet.h"
 
+#include "tcpstate.h"
+
+#include "myFunction.h"
+
 
 using std::cout;
 using std::endl;
@@ -46,6 +50,9 @@ int main(int argc, char *argv[])
 
   MinetEvent event;
 
+cerr<<"BEGIN"<<endl;
+
+
   while (MinetGetNextEvent(event)==0) {
     // if we received an unexpected type of event, print error
     if (event.eventtype!=MinetEvent::Dataflow 
@@ -70,18 +77,61 @@ int main(int argc, char *argv[])
 
 	cerr << "Checksum is " << (tcph.IsCorrectChecksum(p) ? "VALID" : "INVALID");
 
-	//rdt 1.0 all things are perfect
+	//connection, tuple
 	Connection c;
 	ipl.GetDestIP(c.src);
 	ipl.GetSourceIP(c.dest);
 	ipl.GetProtocol(c.protocol);
 	tcph.GetDestPort(c.srcport);
 	tcph.GetSourcePort(c.destport);
+
+
+	//flag
+	unsigned char flag = 0;
+
+	//SYN
+	tcph.GetFlags(flag);
+
+	TEST((int)flag);
+
+	//FOR TEST
+	if(IS_SYN(flag)) {
+	    TEST("add LISTEN state connection");
+	    TCPState ts(100, LISTEN, 3);
+	    ConnectionToStateMapping<TCPState> m(c, Time(3), ts, TIMER_START);
+	    clist.push_back(m);
+	}
+
+	//first check whether there's already a connection
 	ConnectionList<TCPState>::iterator cs = clist.FindMatching(c);
-	//if there is an opening socket matching
+	
 	if(cs!=clist.end()) {
-	    unsigned datalen;
-	} else {}
+	//if there is an opening socket matching
+	    //if-else or switch for each STATE
+	    //app layer should tell trans layer to create a connection with LISTEN state
+	    TEST(cs->state.GetState());
+	    
+	    switch(cs->state.GetState()) {
+		case CLOSED: 
+		case LISTEN: handleLISTEN(*cs);
+			     break;
+		case SYN_RCVD:
+		case SYN_SENT:
+		case SYN_SENT1:
+		case ESTABLISHED:
+		case SEND_DATA:
+		case CLOSE_WAIT:
+		case FIN_WAIT1:
+		case CLOSING:
+		case LAST_ACK:
+		case FIN_WAIT2:
+		case TIME_WAIT:
+		default: cerr<<"Wrong Connection State."<<endl;
+	    } 
+
+	} else {
+	    cerr<<"No such connection."<<endl;
+	}
 	
       }
       //  Data from the Sockets layer above  //
@@ -89,8 +139,15 @@ int main(int argc, char *argv[])
 	SockRequestResponse s;
 	MinetReceive(sock,s);
 	cerr << "Received Socket Request:" << s << endl;
+	SockRequestResponse repl;
+	repl.type = STATUS;
+	repl.error=EWHAT;
+	MinetSend(sock, repl);
       }
     }
+    cerr<<"Cycle End"<<endl;
   }
   return 0;
 }
+
+

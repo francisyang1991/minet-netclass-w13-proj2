@@ -51,11 +51,12 @@ apps          := $(patsubst %.o, %, $(app-objs)) \
 		 $(patsubst %.o, %, $(core-objs)) \
 		 $(patsubst %.o, %, $(lowlevel-objs))
 
+
 app-objs      := $(patsubst %, $(app-dir)/%, $(app-objs))
 core-objs      := $(patsubst %, $(core-dir)/%, $(core-objs))
 lowlevel-objs      := $(patsubst %, $(lowlevel-dir)/%, $(lowlevel-objs))
 
-all-objs := $(lib-objs) $(app-objs) $(core-objs) $(lowlevel-objs)
+all-objs := $(lib-objs) $(app-objs) $(core-objs) $(lowlevel-objs) 
 
 test: all
 	echo "***********************************************************"

@@ -25,6 +25,8 @@ int main(int argc, char *argv[])
 {
   MinetHandle mux, sock;
 
+  ConnectionList<TCPState> clist;
+
   MinetInit(MINET_TCP_MODULE);
 
   mux=MinetIsModuleInConfig(MINET_IP_MUX) ? MinetConnect(MINET_IP_MUX) : MINET_NOHANDLE;
@@ -55,6 +57,8 @@ int main(int argc, char *argv[])
       if (event.handle==mux) {
 	Packet p;
 	MinetReceive(mux,p);
+
+	bool checksumok;
 	unsigned tcphlen=TCPHeader::EstimateTCPHeaderLength(p);
 	cerr << "estimated header len="<<tcphlen<<"\n";
 	p.ExtractHeaderFromPayload<TCPHeader>(tcphlen);
@@ -65,6 +69,19 @@ int main(int argc, char *argv[])
 	cerr << "TCP Header is "<<tcph << " and ";
 
 	cerr << "Checksum is " << (tcph.IsCorrectChecksum(p) ? "VALID" : "INVALID");
+
+	//rdt 1.0 all things are perfect
+	Connection c;
+	ipl.GetDestIP(c.src);
+	ipl.GetSourceIP(c.dest);
+	ipl.GetProtocol(c.protocol);
+	tcph.GetDestPort(c.srcport);
+	tcph.GetSourcePort(c.destport);
+	ConnectionList<TCPState>::iterator cs = clist.FindMatching(c);
+	//if there is an opening socket matching
+	if(cs!=clist.end()) {
+	    unsigned datalen;
+	} else {}
 	
       }
       //  Data from the Sockets layer above  //

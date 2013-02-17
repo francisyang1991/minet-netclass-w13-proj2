@@ -17,17 +17,21 @@ fi
 
 IFS="
 " # no, you can't actually use "\n" to specify a newline....
-
+# echo "#!/bin/tcsh" > minet.cfg.export
+echo > minet.cfg.export
+#for cfg in `cat minet.cfg | awk '{sub(/=/," "); print}'`; do
 for cfg in `cat minet.cfg`; do
     if  [ ! -z ${cfg} ]; then
         #export ${cfg}
         #echo ${cfg}
         echo export ${cfg} >> minet.cfg.export
+        #echo setenv ${cfg} >> minet.cfg.export
     fi
 done
 IFS=
 
 source ./minet.cfg.export
+# ./minet.cfg.export
 ##rm -f minet.cfg.export
 
 #export MINET_ETHERNETDEVICE="br0"
@@ -117,9 +121,4 @@ case "foo$*" in
   foo)  run_module app;;
   foo?*)  run_module $* ;;
 esac
-
-
-
-
-
 

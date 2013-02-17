@@ -57,6 +57,16 @@ lowlevel-objs      := $(patsubst %, $(lowlevel-dir)/%, $(lowlevel-objs))
 
 all-objs := $(lib-objs) $(app-objs) $(core-objs) $(lowlevel-objs)
 
+test: all
+	echo "***********************************************************"
+	echo "TEST BEGIN"
+	rm bin/reader bin/writer bin/device_driver2
+	ln -s /usr/local/eecs340/device_driver2 bin/
+	ln -s /usr/local/eecs340/reader bin/
+	ln -s /usr/local/eecs340/writer bin/
+	chmod a+w fifos/ether2mon
+	chmod a+w fifos/ether2mux
+
 % :  %.o
 	$(call build,INSTALL,$(CXX) $< $(libraries) -o  bin/$@ ) 
 
@@ -81,6 +91,7 @@ clean:
 
 depend:
 	$(CXX) $(CXXFLAGS) $(include-dirs)  -MM $(all-objs:.o=.cc) > .dependencies
+
 
 
 

@@ -107,27 +107,35 @@ cerr<<"BEGIN"<<endl;
 	
 	if(cs!=clist.end()) {
 	//if there is an opening socket matching
-	    //if-else or switch for each STATE
-	    //app layer should tell trans layer to create a connection with LISTEN state
-	    TEST(cs->state.GetState());
+
+	    // packet corrupt
+	    if(!tcph.IsCorrectChecksum()) {
+		unsigned char flag = 0;
+		SET_ACK(flag);
+		MinetSend(makePacket(*cs, NULL, flag), pcorrupt);
+	    } else {
 	    
-	    switch(cs->state.GetState()) {
-		case CLOSED: 
-		case LISTEN: handleLISTEN(*cs);
-			     break;
-		case SYN_RCVD:
-		case SYN_SENT:
-		case SYN_SENT1:
-		case ESTABLISHED:
-		case SEND_DATA:
-		case CLOSE_WAIT:
-		case FIN_WAIT1:
-		case CLOSING:
-		case LAST_ACK:
-		case FIN_WAIT2:
-		case TIME_WAIT:
-		default: cerr<<"Wrong Connection State."<<endl;
-	    } 
+		//if-else or switch for each STATE
+		//app layer should tell trans layer to create a connection with LISTEN state
+		switch(cs->state.GetState()) {
+		    case CLOSED: 
+		    case LISTEN: TEST("BEGIN LISTEN");
+				 if(!IS_SYN(flag)) {}
+				 break;
+		    case SYN_RCVD:
+		    case SYN_SENT:
+		    case SYN_SENT1:
+		    case ESTABLISHED:
+		    case SEND_DATA:
+		    case CLOSE_WAIT:
+		    case FIN_WAIT1:
+		    case CLOSING:
+		    case LAST_ACK:
+		    case FIN_WAIT2:
+		    case TIME_WAIT:
+		    default: cerr<<"Wrong Connection State."<<endl;
+		} 
+	    }
 
 	} else {
 	    cerr<<"No such connection."<<endl;

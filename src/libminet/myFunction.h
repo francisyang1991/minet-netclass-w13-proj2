@@ -5,6 +5,8 @@
 
 #include "Minet.h"
 
+#include "packet.h"
+
 #include "constate.h"
 #include "tcpstate.h"
 
@@ -29,5 +31,7 @@ extern void handleCLOSING(const ConnectionToStateMapping<TCPState> & con_state);
 extern void handleLAST_ACK(const ConnectionToStateMapping<TCPState> & con_state);
 extern void handleFIN_WAIT2(const ConnectionToStateMapping<TCPState> & con_state);
 extern void handleTIME_WAIT(const ConnectionToStateMapping<TCPState> & con_state);
+
+extern Packet & makePacket(const ConnectionToStateMapping<TCPState>, const Buffer & buf, unsigned char flag);
 
 #endif

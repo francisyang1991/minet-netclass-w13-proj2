@@ -151,6 +151,88 @@ cerr<<"BEGIN"<<endl;
 	repl.type = STATUS;
 	repl.error=EWHAT;
 	MinetSend(sock, repl);
+	switch(s.type){
+		case CONNECT:
+		case ACCPEPT:
+		  {
+		   SockRequestResponse sl;
+		   sl.type = STATUS;
+		   sl.bytes = 0;
+		   sl.erro = EOK;
+		   MinetSend(sock,sl);
+	          }
+			break;
+		case STATUS:
+			break;
+		case WRITE:
+		  {   
+		    unsigned bytes = MIN_MACRO(TCP_MAX_DATA, s.data.GetSize());
+		    Packet p(s.data.ExtractFront(bytes));
+		    // Set IP Header
+		    IPHeader tcpih;
+		    tcpih.SetProtocal(IP_PROTO_TCP);
+		    tcpih.SetSourceIp(s.connection.src);
+		    tcpih.SetDestIP(req.connection.dest);
+		    tcpih.SetTotalLength(bytes+TCP_HEADER_LENGTH+IPHEADER_BASE_LENGTH);
+//============================================================
+		    p.PushFrontHeader(tcpih);
+//=============================================================		    
+		    TCPHeader tch;
+		    tch.SetSourcePort(s.connection.srcport,p);
+		    tch.SetDestPort(s.connection.destport,p);
+		    tch.SetLength(TCP+HEADER_LENGTH+byted,p);
+		    
+		    p.PushBackHeader(uh);
+		    MinetSend(mux,p);
+ 		    SockRequestResponse sl;
+		    sl.type = STATUS;
+		    sl.connetion = s.connection;
+		    sl.bytes = bytes;
+		    sl.error = EOK;
+		   }
+			break;
+		case FORWARD:
+		  {
+		    ConnectionToStateMapping<TCPState> n;
+		    n.connection = s.connection;
+//===============================================================
+		    ConnectionList<TCPState>::iterator cs = clist.FindMatching(req.connetion);
+		    if(cs!=clist.end()){
+			clist.erase(cs);
+		    }
+		    clist.push_back(n);
+		    SockRequestResponse sl;
+		    sl.type = STATUS;
+		    sl.conneciton = s.conneciton;
+		    sl.error = EOK;
+		    sl.bytes = 0;
+		    MinetSend(sock,sl);
+		    }
+			break;
+		case CLOSE:
+		  {
+	  	    ConnectionList<UDPState>::iterator cs = clist.FindMatching(s.connection);
+		    SockRequestResponse sl;
+		    sl.connection = req.connection;
+		    sl.type = STATUS;
+		    if(cs == clist.end()){
+			sl.error = ENOMATCH;
+		    }else{
+		        sl.error= EOK;
+                        clist.erase(cs)'
+		    }
+		    MinetSend(sock, repl);
+	   	   }
+			break;
+		default:
+		  {
+			SockRequestResponse sl;
+			sl.type =STATUS;
+			sl.error = EWHAT;
+			MinetSend(sock,sl);
+		   }
+
+	}
       }
     }
     cerr<<"Cycle End"<<endl;
